@@ -1,0 +1,704 @@
+from reading import *
+from database import *
+
+# Below, write:
+# *The cartesian_product function
+# *All other functions and helper functions
+# *Main code that obtains queries from the keyboard,
+#  processes them, and uses the below function to output csv results
+
+# My overall thought:
+# Initially, I need a function that used for calculate the cartesian product
+# Then I need a function to divide the the query into three pieces and
+# store them into the dictionary
+# Then use the function to put all the table in the table_list together
+# Then use a function to split the constrain to get a
+# list [object one, operator, object two,
+# bool(whether the second value is a hard code)]
+# Then use the function to check whether both of the objects are float or not
+# Then use the function compare the two objects
+# Then use the function to process one constrain
+# Then use the function to process all the constrains
+# Then use the run-query function to get all the thing together
+
+
+def cartesian_product(first_input_table, second_input_table):
+    '''
+    (Table, Table) -> Table
+    REQ: both table_table_one and table_two should be valid table
+    Given two table, this function will return a
+    new table where each row in the first table
+    is paired with every row in the second table
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> result = cartesian_product(initial_table, second_table)
+    >>> result = result.get_dict()
+    >>> result == {}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> result = cartesian_product(initial_table, second_table)
+    >>> result = result.get_dict()
+    >>> result == {'1':[], '2':[]}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> second_dict = {'5':[], '6': [], '7':[]}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> result = cartesian_product(initial_table, second_table)
+    >>> result = result.get_dict()
+    >>> result == {'1':[], '2':[], '5':[], '6':[], '7':[]}
+    True
+    >>> initial_dict = {'1':[], '2':[]}
+    >>> second_dict = {'5':[], '6': [], '7':[]}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> result = cartesian_product(initial_table, second_table)
+    >>> result = result.get_dict()
+    >>> result == {'1':[], '2':[], '5':[], '6':[], '7':[]}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> second_dict = {'5':[], '6': [], '7':[]}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> result = cartesian_product(initial_table, second_table)
+    >>> result = result.get_dict()
+    >>> result == {'1':[], '2':[], '5':[], '6':[], '7':[]}
+    True
+    >>> initial_dict = {'1':['a','b'], '2':['d','e']}
+    >>> second_dict = {'5':['q','w'], '6': ['w','e']}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> result = cartesian_product(initial_table, second_table)
+    >>> result = result.get_dict()
+    >>> result == {'1':['a','a','b','b'], '2':['d','d','e','e'], \
+'5':['q','w','q','w'], '6':['w','e','w','e']}
+    True
+    '''
+    # Initially, I need to create a new_dict which belong to class
+    # Table which has a method named cartesian_product
+    new_table = Table()
+    # Call cartesian method in the Table class
+    # which contains other five other methods to
+    # calculate out the correct table
+    new_table.cartesian(first_input_table, second_input_table)
+    return new_table
+
+
+def split_the_squeal(query):
+    '''
+    (str)-> dict{str:list of str}
+    REQ: the input query should be in the correct syntax
+    Given one query in its correct syntax, this function produce
+    one dictionary to store the column_name_list, table_name_list,
+    and constrain_list(optional)
+    >>> query = "select a.column from b"
+    >>> result = split_the_squeal(query)
+    >>> result =={'column': ['a.column'], 'table': ['b']}
+    True
+    >>> query = "select a.column,b.column from b"
+    >>> result = split_the_squeal(query)
+    >>> result == {'column': ['a.column', 'b.column'], 'table': ['b']}
+    True
+    >>> query = "select a.column from b,c"
+    >>> result = split_the_squeal(query)
+    >>> result == {'column': ['a.column'], 'table': ['b', 'c']}
+    True
+    >>> query = "select a.column from b,c where a.column='what do you like'"
+    >>> result = split_the_squeal(query)
+    >>> result == {'column': ['a.column'], 'constrain': \
+    ["a.column='what do you like'"],'table': ['b', 'c']}
+    True
+    >>> query = "select a from b where a='ae',b='ew'"
+    >>> result = split_the_squeal(query)
+    >>> result == {'column': ['a'], 'constrain': ["a='ae'", "b='ew'"],\
+     'table': ['b']}
+    True
+    '''
+    # Initially, I need to use the index method in the string to get the
+    # index of two tokens('select' and 'from')
+    index_of_select = query.index("select")
+    index_of_from = query.index("from")
+    # create a dictionary to contain the elements
+    new_dict = dict()
+    # define the number
+    # the gap between select and column name is 7
+    first_gap = 7
+    beginning = index_of_select + first_gap
+    # there are one space between column_name and from
+    len_of_space = 1
+    end = index_of_from - len_of_space
+    # Try to get a list of str stands for
+    # [token, column_name, token, table_name, token, constraint]
+    # create a dictionary to contain the values for the keys title_name
+    # table_name and the constraint
+    list_of_column_name = query[beginning: end].split(",")
+    new_dict['column'] = list_of_column_name
+    # define the number
+    # then we can get a list of table_name
+    # Because the token 'where' which located at the
+    # position five may not occur in the input query
+    # So we need to use if to check whether there are
+    # constraint after the token 'where'
+    # If so, create a new list to contain them in the new dictionary
+    # If not, all of the value after the token 'from' are stored under the
+    # the key 'table'
+    if 'where' in query:
+        list_of_table_name =\
+            query[index_of_from + 5: query.index("where") - 1].split(",")
+        new_dict['table'] = list_of_table_name
+        list_of_constraint = query[query.index('where') + 6:]
+        new_dict['constrain'] = list_of_constraint.split(',')
+    else:
+        list_of_table_name = query[index_of_from + 5:].split(",")
+        new_dict['table'] = list_of_table_name
+    return new_dict
+
+
+def get_mul_table(table_list):
+    '''
+    (list of str) -> Table
+    REQ: each value in table_list should be a valid table
+    Given a list of table, this function will process cartesian function to
+    each of the table in the table_list in order and return a huge table
+    >>> initial_dict = {'1':['a','b'], '2':['d','e']}
+    >>> second_dict = {'5':['q','w'], '6': ['w','e']}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> list_of_table = [initial_table, second_table]
+    >>> result = get_mul_table(list_of_table).get_dict()
+    >>> result == {'2': ['d', 'd', 'e', 'e'], '1': ['a', 'a', 'b', 'b'],\
+     '5': ['q', 'w', 'q', 'w'], '6': ['w', 'e', 'w', 'e']}
+    True
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> third_table = Table()
+    >>> list_of_table = [initial_table, second_table, third_table]
+    >>> result = get_mul_table(list_of_table).get_dict()
+    >>> result == {}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> third_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> list_of_table = [initial_table, second_table, third_table]
+    >>> result = get_mul_table(list_of_table).get_dict()
+    >>> result == {'1':[], '2':[]}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> second_dict = {'5':[], '6': [], '7':[]}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> third_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> list_of_table = [initial_table, second_table, third_table]
+    >>> result = get_mul_table(list_of_table).get_dict()
+    >>> result == {'1':[], '2':[], '5':[],'6':[],'7':[]}
+    True
+    '''
+    # Check the length of the table, if the length of
+    # table is larger than 2, (which means that there is more than two table
+    # in the table_list) then combine the two lists in the table_list to form
+    # a huge table
+    marker_line = 2
+    index_of_first_table = 0
+    index_of_second_table = 1
+    index_of_remaining_tables = 2
+    # Likewise, use the cartesian_function to combine the remaining table in
+    #  order with the huge table we just get
+    # If the length of the table is less than 2, which means that there is
+    # only one table in the given dictionary, just pick it out from the list
+    if len(table_list) >= marker_line:
+        the_first_table = table_list[index_of_first_table]
+        the_second_table = table_list[index_of_second_table]
+        union_table = cartesian_product(the_first_table, the_second_table)
+        for next_table in table_list[index_of_remaining_tables:]:
+            union_table = cartesian_product(union_table, next_table)
+    else:
+        union_table = table_list[index_of_first_table]
+    return union_table
+
+
+def split_the_constrain(constrain):
+    '''(str) -> list of str and bool
+    REQ: constrain should be in correct syntax
+    Given a constrain, this function will return a new list
+    [object_one, operator, object_two,
+    boolean: whether the second value is a hard code]
+    >>> constrain = "a>'2'"
+    >>> split_the_constrain(constrain)
+    ['a', '>', '2', True]
+    >>> constrain = "a='2001'"
+    >>> split_the_constrain(constrain)
+    ['a', '=', '2001', True]
+    >>> constrain = "a=b"
+    >>> split_the_constrain(constrain)
+    ['a', '=', 'b', False]
+    >>> constrain = "a>b"
+    >>> split_the_constrain(constrain)
+    ['a', '>', 'b', False]
+    '''
+    # Check which operator occur in this case (one of > or =)
+    if "=" in constrain:
+        operator = "="
+    elif ">" in constrain:
+        operator = ">"
+    # Find the operator and get the index of its position
+    the_index_of_operator = constrain.index(operator)
+    # Since we get the index of operator and there is not space
+    # between the object_one and the operator, we can get the
+    # get the initial object directly
+    the_initial_object = constrain[:the_index_of_operator]
+    # get the operator
+    the_operator = operator
+    # check whether there is hard code in the given constrain
+    # Since the ' can be regraded as the token of the hard code,
+    # Then use find the position of it
+    # If there is "'", just store the information before the second "'"
+    # and put it into a list
+    if "'" in constrain:
+        index_of_token = constrain.index("'")
+        the_second_value = constrain[index_of_token + 1: -1]
+        find_token = True
+    else:
+        the_second_value = constrain[the_index_of_operator + 1:]
+        find_token = False
+    # create a new list to store pieces of the constrain in order
+    # [object_one, the_operator, the second_object, whether find token]
+    new_list = list()
+    new_list.append(the_initial_object)
+    new_list.append(the_operator)
+    new_list.append(the_second_value)
+    new_list.append(find_token)
+    return new_list
+
+
+def check_the_number(the_first_input, the_second_input):
+    '''(?, ?) -> bool
+    REQ: object1 and object2 should be valid
+    Given two object, this function will return
+    a bool whether both of objects can be turned into float
+    >>> the_first_input = '123'
+    >>> the_second_input = '234'
+    >>> check_the_number(the_first_input, the_second_input)
+    True
+    >>> the_first_input = 'world'
+    >>> the_second_input = 'hello'
+    >>> check_the_number(the_first_input, the_second_input)
+    False
+    >>> the_first_input = 'world'
+    >>> the_second_input = "123"
+    >>> check_the_number(the_first_input, the_second_input)
+    False
+    >>> the_first_input = "456"
+    >>> the_second_input = "world"
+    >>> check_the_number(the_first_input, the_second_input)
+    False
+    '''
+    # Use the try method to transform the_first_input into float
+    # Use the try to transform  the_second_input into float
+    # If both the initial input and second input are integers or floats, then
+    # return True
+    # If not, return False
+    try:
+        object1 = float(the_first_input)
+        object2 = float(the_second_input)
+        result = True
+    except:
+        result = False
+    return result
+
+
+def compare(the_first_input, operator, the_second_input):
+    '''
+    (? , ?) -> bool
+    REQ: operator should be either '>' or '='
+    Given two objects which are either number or str, this function will
+    return a bool whether object1 is larger than object2
+    >>> first_input = '123'
+    >>> operator = '>'
+    >>> second_input = '234'
+    >>> compare(first_input, operator, second_input)
+    False
+    >>> first_input = 'abc'
+    >>> operator = '='
+    >>> second_input = 'bcd'
+    >>> compare(first_input, operator, second_input)
+    False
+    >>> first_input = 'zfg'
+    >>> operator = '>'
+    >>> second_input = 'hij'
+    >>> compare(first_input, operator, second_input)
+    True
+    >>> first_input = 'hij'
+    >>> operator = '='
+    >>> second_input = 'hij'
+    >>> compare(first_input, operator, second_input)
+    True
+    >>> first_input = 'zfg'
+    >>> operator = '>'
+    >>> second_input = '123'
+    >>> compare(first_input, operator, second_input)
+    True
+    >>> first_input = '123'
+    >>> operator = "="
+    >>> second_input = "123"
+    >>> compare(first_input, operator, second_input)
+    True
+    '''
+    # Initially, check whether both of the first_input and second_input
+    # are both numbers or not use the check_the_number function
+    # If so, we need to compare them as numbers
+    # If not, we just compare their value as string
+    if check_the_number(the_first_input, the_second_input):
+        the_initial_float = float(the_first_input)
+        the_second_float = float(the_second_input)
+        if operator == '>':
+            result = (the_initial_float > the_second_float)
+        elif operator == '=':
+            result = (the_initial_float == the_second_float)
+    else:
+        if operator == '>':
+            result = (the_first_input > the_second_input)
+        elif operator == '=':
+            result = (the_first_input == the_second_input)
+    return result
+
+
+def processing_one_constraint(input_table, constrain):
+    '''
+    (Table, str) -> Table
+    REQ: the input_constrain should satisfy the required syntax
+    Given a table and constrain, this function will return a new table which
+    adding all the rows that satisfy the constrain
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> initial_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> constrain = "2='d'"
+    >>> new_table = processing_one_constraint(initial_table, constrain)
+    >>> result = new_table.get_dict()
+    >>> result == {'1': ['a'], '2': ['d']}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> initial_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> constrain = "1='a'"
+    >>> new_table = processing_one_constraint(initial_table, constrain)
+    >>> result = new_table.get_dict()
+    >>> result == {'1': ['a'], '2': ['d']}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> initial_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> constrain = "1>'c'"
+    >>> new_table = processing_one_constraint(initial_table, constrain)
+    >>> result = new_table.get_dict()
+    >>> result == {'1': [], '2': []}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> initial_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> constrain = "1>2"
+    >>> new_table = processing_one_constraint(initial_table, constrain)
+    >>> result = new_table.get_dict()
+    >>> result == {'1': [], '2': []}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> initial_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> constrain = "2>1"
+    >>> new_table = processing_one_constraint(initial_table, constrain)
+    >>> result = new_table.get_dict()
+    >>> result == {'2': ['d', 'f', 'g'], '1': ['a', 'b', 'c']}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['a','b','c']}
+    >>> initial_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> constrain = "2=1"
+    >>> new_table = processing_one_constraint(initial_table, constrain)
+    >>> result = new_table.get_dict()
+    >>> result == {'1': ['a', 'b', 'c'], '2': ['a', 'b', 'c']}
+    True
+    '''
+    # Calculate the total rows in the given table and use it as a
+    # count in a for loop
+    index_of_table = input_table.num_rows()
+    # Split the whole constrain into pieces using the split_the_constrain
+    # to get a list of str [column_one, operator, column_two, bool]
+    list_of_constrain = split_the_constrain(constrain)
+    # According to the function split_the_constrain, column one will
+    # be at the position 0 in the list_of_constrain
+    column_one = input_table.get_the_wanted_column(list_of_constrain[0])
+    # Likewise, we use the number to call the operator and boolean back
+    operator = list_of_constrain[1]
+    boolean = list_of_constrain[3]
+    # create a new table to contain all of the rows that satisfy the rule
+    new_table = Table()
+    # use the get_all_key method to get all the keys in the input table
+    # then the new_table should be reset
+    new_table.reset_the_table(input_table.get_all_key())
+    # check whether there is hard code in the given constrain
+    # If so, the second input should always be the hard code,
+    # then we use the compare function to check whether the new object
+    # satisfy the constrain. If so, add
+    # the whole row to the new dict using the for loop
+    # If not, the second input should be the corresponding element in
+    # the column_two
+    # Likewise, add the proper rows to the dictionary using the for loop
+    if boolean:
+        for count in range(index_of_table):
+            the_first_input = column_one[count]
+            the_second_input = list_of_constrain[2]
+            if compare(the_first_input, operator, the_second_input):
+                for every_column in new_table.table:
+                    new_element =\
+                        input_table.get_one_element(every_column, count)
+                    new_table.add_new_element(every_column, new_element)
+    else:
+        column_two = input_table.get_the_wanted_column(list_of_constrain[2])
+        for count in range(index_of_table):
+            the_first_input = column_one[count]
+            the_second_input = column_two[count]
+            if compare(the_first_input, operator, the_second_input):
+                for every_column in new_table.table:
+                    new_element =\
+                        input_table.get_one_element(every_column, count)
+                    new_table.add_new_element(every_column, new_element)
+    return new_table
+
+
+def processing_all_constrains(table, list_of_constrains):
+    '''
+    (Table, list of str) -> Table
+    REQ: all the value in the list-of-constrains should have a correct syntax
+    Given a table and a list of constrain, this function will return a new
+    table which have rows from the given table that satisfy all of the
+    constrains in the list of constrains
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> initial_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> list_of_constrains = ["2>1"]
+    >>> new_table =\
+     processing_all_constrains(initial_table, list_of_constrains)
+    >>> result = new_table.get_dict()
+    >>> result == {'2': ['d', 'f', 'g'], '1': ['a', 'b', 'c']}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> initial_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> list_of_constrains = ["2>1","2='g'"]
+    >>> new_table =\
+     processing_all_constrains(initial_table, list_of_constrains)
+    >>> result = new_table.get_dict()
+    >>> result == {'1': ['c'], '2': ['g']}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['d','f','g']}
+    >>> initial_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> list_of_constrains = ["2>1","2='f'"]
+    >>> new_table =\
+     processing_all_constrains(initial_table, list_of_constrains)
+    >>> result = new_table.get_dict()
+    >>> result == {'1': ['b'], '2': ['f']}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['a','f','g']}
+    >>> initial_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> list_of_constrains = ["2=1","2='a'"]
+    >>> new_table =\
+     processing_all_constrains(initial_table, list_of_constrains)
+    >>> result = new_table.get_dict()
+    >>> result == {'1': ['a'], '2': ['a']}
+    True
+    >>> initial_dict = {'1':['a','b','c'], '2':['a','f','g']}
+    >>> initial_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> list_of_constrains = ["1>2","2='a'"]
+    >>> new_table =\
+     processing_all_constrains(initial_table, list_of_constrains)
+    >>> result = new_table.get_dict()
+    >>> result == {'1':[], '2':[]}
+    True
+    '''
+    # We can use a for loop to loop all of the constrains and create a
+    # new table whose content suits for the all of the constrains
+    for next_constrain in list_of_constrains:
+        table = processing_one_constraint(table, next_constrain)
+    return table
+
+
+def run_query(input_database, input_squeal):
+    '''
+    (Database, str) -> Table
+    REQ: Database should include every data for the squeal
+    REQ: input_squeal must be in the correct syntax
+    Given a class Database and the squeal, this function will
+    return a Table which satisfy all of the requirement in the
+    input_squeal such as the required column, the required table,
+    the required constrains(optional)
+    >>> initial_dict = {'1':['a','b'], '2':['d','e']}
+    >>> second_dict = {'5':['q','w'], '6': ['w','e']}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> new_database = Database()
+    >>> dict_of_table =\
+     {'first_file':initial_table,'second_file':second_table}
+    >>> new_database.set_dict(dict_of_table)
+    >>> input_squeal = "select 1 from first_file"
+    >>> new_table = run_query(new_database, input_squeal)
+    >>> result_dict = new_table.get_dict()
+    >>> result_dict == {'1': ['a', 'b']}
+    True
+    >>> initial_dict = {'1':['a','b'], '2':['d','e'],'3':['f','g']}
+    >>> second_dict = {'5':['q','w'], '6': ['w','e']}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> new_database = Database()
+    >>> dict_of_table =\
+     {'first_file':initial_table,'second_file':second_table}
+    >>> new_database.set_dict(dict_of_table)
+    >>> input_squeal = "select * from first_file"
+    >>> new_table = run_query(new_database, input_squeal)
+    >>> result_dict = new_table.get_dict()
+    >>> result_dict == {'3': ['f', 'g'], '1': ['a', 'b'], '2': ['d', 'e']}
+    True
+    >>> initial_dict = {'1':['a','b'], '2':['d','e'],'3':['f','g']}
+    >>> second_dict = {'5':['q','w'], '6': ['w','e']}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> new_database = Database()
+    >>> dict_of_table =\
+     {'first_file':initial_table,'second_file':second_table}
+    >>> new_database.set_dict(dict_of_table)
+    >>> input_squeal = "select * from first_file,second_file"
+    >>> new_table = run_query(new_database, input_squeal)
+    >>> result_dict = new_table.get_dict()
+    >>> result_dict == {'5': ['q', 'w', 'q', 'w'], '6': ['w', 'e', 'w', 'e'],\
+    '3': ['f', 'f', 'g', 'g'], '2': ['d', 'd', 'e', 'e'],\
+     '1': ['a', 'a', 'b', 'b']}
+    True
+    >>> initial_dict = {'1':['a','b'], '2':['d','e'],'3':['f','g']}
+    >>> second_dict = {'5':['q','w'], '6': ['w','e']}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> new_database = Database()
+    >>> dict_of_table =\
+     {'first_file':initial_table,'second_file':second_table}
+    >>> new_database.set_dict(dict_of_table)
+    >>> input_squeal = "select * from first_file where 1='a'"
+    >>> new_table = run_query(new_database, input_squeal)
+    >>> result_dict = new_table.get_dict()
+    >>> result_dict == {'2': ['d'], '3': ['f'], '1': ['a']}
+    True
+    >>> initial_dict = {'1':['a','b'], '2':['d','e'],'3':['f','g']}
+    >>> second_dict = {'5':['q','w'], '6': ['w','e']}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> new_database = Database()
+    >>> dict_of_table =\
+    {'first_file':initial_table,'second_file':second_table}
+    >>> new_database.set_dict(dict_of_table)
+    >>> input_squeal = "select * from first_file where 1='a',2='d'"
+    >>> new_table = run_query(new_database, input_squeal)
+    >>> result_dict = new_table.get_dict()
+    >>> result_dict == {'2': ['d'], '1': ['a'], '3': ['f']}
+    True
+    >>> initial_dict = {'1':['a','b'], '2':['d','e'],'3':['f','g']}
+    >>> second_dict = {'5':['q','w'], '6': ['w','e']}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> new_database = Database()
+    >>> dict_of_table =\
+     {'first_file':initial_table,'second_file':second_table}
+    >>> new_database.set_dict(dict_of_table)
+    >>> input_squeal = "select 1,2 from first_file where 1='a',2='d'"
+    >>> new_table = run_query(new_database, input_squeal)
+    >>> result_dict = new_table.get_dict()
+    >>> result_dict == {'1': ['a'], '2': ['d']}
+    True
+    >>> initial_dict = {'1':['a','b'], '2':['d','e'],'3':['f','g']}
+    >>> second_dict = {'5':['q','w'], '6': ['w','e']}
+    >>> initial_table = Table()
+    >>> second_table = Table()
+    >>> initial_table.set_dict(initial_dict)
+    >>> second_table.set_dict(second_dict)
+    >>> new_database = Database()
+    >>> dict_of_table =\
+     {'first_file':initial_table,'second_file':second_table}
+    >>> new_database.set_dict(dict_of_table)
+    >>> input_squeal =\
+    "select 1,2,3,5 from first_file,second_file where 1='a',2='d'"
+    >>> new_table = run_query(new_database, input_squeal)
+    >>> result_dict = new_table.get_dict()
+    >>> result_dict == {'5': ['q', 'w'], '1': ['a', 'a'], '3': ['f', 'f'], \
+    '2': ['d', 'd']}
+    True
+    '''
+    # Initially, split all of the squeal to get a dict named piece of the
+    # squeal which have at least two keys
+    pieces_of_squeal = split_the_squeal(input_squeal)
+    # use the key to call back the list of table and column respectively
+    table_list = input_database.get_all_table(pieces_of_squeal['table'])
+    column_list = pieces_of_squeal['column']
+    # Initially, we need to calculate the length of pieces_of_squeal
+    # If the length of squeal is 3, which means that the dictionary has
+    # three keys(column, table, constrain). Therefore, there must exist
+    # constrains in the input_squeal.
+    # then we need to get the constrain list and use the
+    # processing_all_constrains function to get the final table. Then use the
+    # get_column method to get the right
+    # table that satisfy the squeal
+    # If the length of the squeal is less than 3, which means that
+    # the dictionary has only two keys(column and table).
+    # Therefore, we just need to get the constrain list and use the
+    # get_column method to get the right answer
+    # define the marker line for the length
+    marker_line = 3
+    if len(pieces_of_squeal) == marker_line:
+        the_previous_table = get_mul_table(table_list)
+        list_of_constrain = pieces_of_squeal['constrain']
+        the_processed_table =\
+            processing_all_constrains(the_previous_table, list_of_constrain)
+        result_table = the_processed_table.get_column(column_list)
+    else:
+        the_previous_table = get_mul_table(table_list)
+        result_table = the_previous_table.get_column(column_list)
+    return result_table
+
+
+if(__name__ == "__main__"):
+    # use a while loop to make sure that the when the input query is empty,
+    # the input function will stop
+    query = input("Enter a SQuEaL query, or a blank line to exit:")
+    # use the read_database method to get the all the table as a database
+    the_whole_database = read_database()
+    while query:
+        the_final_table = run_query(the_whole_database, query)
+        the_final_table.print_csv()
+        query = input("Enter a SQuEaL query, or a blank line to exit:")
