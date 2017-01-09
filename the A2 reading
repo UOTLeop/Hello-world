@@ -1,0 +1,37 @@
+# Functions for reading tables and databases
+
+from database import *
+import glob
+
+# YOU DON'T NEED TO KEEP THE FOLLOWING CODE IN YOUR OWN SUBMISSION
+# IT IS JUST HERE TO DEMONSTRATE HOW THE glob CLASS WORKS. IN FACT
+# YOU SHOULD DELETE THE PRINT STATEMENT BEFORE SUBMITTING
+
+
+# Write the read_table and read_database functions below
+def read_table(file_name):
+    '''
+    (str) -> Table
+    REQ: the file name must in the given file
+    Given a file name, this function will return a table that
+    store all of the information in that file
+    '''
+    # create a new empty list to contain the new dict for table
+    new_dict = Table()
+    # Use the read_from_file method in the database which focus
+    # on read all the information in the file and make it into a huge table
+    new_dict.read_from_file(file_name)
+    return new_dict
+
+
+def read_database():
+    '''()-> Database
+    This method is used for creating a database to store all
+    of the information in the file whose name ended with '.csv' '''
+    # get the name_list of all table whose name ended with '.csv'
+    all_of_table_list = glob.glob('*.csv')
+    # reset the database
+    dictionary_for_database = Database()
+    # use the method to get all of the information
+    dictionary_for_database.get_database(all_of_table_list)
+    return dictionary_for_database
